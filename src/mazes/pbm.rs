@@ -124,7 +124,7 @@ mod tests {
 
     #[test]
     fn accepts_comments() {
-        let m = maze_from_pbm_str("P1\n# created by maze_solver\n2 2\n1 0\n0 1\n").unwrap();
+        let m = maze_from_pbm_str("P1\n# created by pathlab\n2 2\n1 0\n0 1\n").unwrap();
         assert_eq!(m.len(), 2);
         assert_eq!(m[0][0], Cell::Wall);
         assert_eq!(m[0][1], Cell::Empty);

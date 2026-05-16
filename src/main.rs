@@ -2,9 +2,9 @@
 //!
 //! The same source compiles to both a native desktop binary (via `eframe`'s
 //! native runner) and a WebAssembly module (via `eframe::WebRunner`). All
-//! UI logic lives in [`maze_solver::app`]; this file only handles boot.
+//! UI logic lives in [`pathlab::app`]; this file only handles boot.
 
-use maze_solver::app::MazeApp;
+use pathlab::app::MazeApp;
 
 // -------------------------------------------------------------------------
 // Native entry point
@@ -14,12 +14,12 @@ fn main() -> eframe::Result<()> {
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
             .with_inner_size([1000.0, 700.0])
-            .with_title("Maze Solver"),
+            .with_title("Pathlab"),
         ..Default::default()
     };
 
     eframe::run_native(
-        "Maze Solver",
+        "Pathlab",
         options,
         Box::new(|cc| {
             egui_extras::install_image_loaders(&cc.egui_ctx);

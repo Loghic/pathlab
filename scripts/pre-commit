@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# pre-commit hook for maze_solver
+# pre-commit hook for pathlab
 # Run from anywhere; the script cd's to the repo root.
 #
 # Stages (run in order, abort on first failure):

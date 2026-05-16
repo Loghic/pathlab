@@ -1,17 +1,17 @@
 [package]
-name = "maze_solver"
+name = "pathlab"
 version = "0.2.0"
 edition = "2021"
 authors = ["Matej Michalek"]
-description = "Cross-platform pathfinding visualizer (A*, BFS, DFS) built with egui."
+description = "Cross-platform pathfinding visualizer (A*, BFS, DFS, K-shortest) built with egui."
 license = "MIT"
 
 [lib]
-name = "maze_solver"
+name = "pathlab"
 path = "src/lib.rs"
 
 [[bin]]
-name = "maze_solver"
+name = "pathlab"
 path = "src/main.rs"
 
 [dependencies]

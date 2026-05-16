@@ -15,7 +15,7 @@ GUI is thin glue over it.
 ## Repo map
 
 ```
-maze-solver/
+pathlab/
 ├── Cargo.toml            # one workspace, lib + bin
 ├── index.html            # served as the wasm entry point
 ├── assets/               # sample .pbm mazes

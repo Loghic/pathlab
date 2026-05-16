@@ -1,11 +1,11 @@
-# Maze Solver
+# Pathlab
 
 A cross-platform pathfinding visualizer built in Rust with [`egui`]/`eframe`.
 Runs natively (Windows / macOS / Linux) **and** in the browser via WebAssembly
 from the same codebase.
 
-[![ci](https://github.com/loghi/pathlab/actions/workflows/ci.yml/badge.svg)](https://github.com/loghi/pathlab/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/loghi/pathlab/branch/main/graph/badge.svg)](https://codecov.io/gh/loghi/pathlab)
+[![ci](https://github.com/Loghic/pathlab/actions/workflows/ci.yml/badge.svg)](https://github.com/Loghic/pathlab/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/Loghic/pathlab/branch/main/graph/badge.svg)](https://codecov.io/gh/Loghic/pathlab)
 ![rust](https://img.shields.io/badge/rust-1.95.0-blue)
 ![license](https://img.shields.io/badge/license-MIT-blue)
 
@@ -38,7 +38,7 @@ from the same codebase.
 ### Native
 
 ```bash
-git clone https://github.com/Loghic/pathlab
+git clone https://github.com/Loghic/pathlab.git
 cd pathlab
 cargo run --release
 ```
@@ -63,7 +63,7 @@ needed.
 Then open <http://127.0.0.1:8080>.
 
 > If you build with `wasm-pack` or `wasm-bindgen-cli` directly, make sure the
-> output file is called `maze_solver.js` so the `index.html` import resolves.
+> output file is called `pathlab.js` so the `index.html` import resolves.
 
 ## Toolchain
 
@@ -86,7 +86,7 @@ downloads the new version. No action required from you.
 ## Project layout
 
 ```
-maze-solver/
+pathlab/
 ├── src/
 │   ├── main.rs          # native + wasm entry points
 │   ├── lib.rs           # re-exports for binary & tests
@@ -136,7 +136,7 @@ top of this README):
   immediately, not at deploy time.
 - `coverage` — runs the test suite under
   [`cargo-llvm-cov`](https://github.com/taiki-e/cargo-llvm-cov) and
-  uploads an LCOV report to [Codecov](https://codecov.io/gh/loghi/a_star).
+  uploads an LCOV report to [Codecov](https://codecov.io/gh/Loghic/pathlab).
   Reading coverage on this project: the solver and undo modules sit
   near 100% because their tests are exhaustive; the `app/` and
   `platform/` modules sit much lower because they're driven by egui

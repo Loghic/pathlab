@@ -2,7 +2,7 @@
 
 Mazes are stored as **P1 PBM** files — the plain-text "portable bitmap"
 format from the Netpbm family. The full Netpbm spec is intentionally
-broad; this section documents the subset Maze Solver reads and writes.
+broad; this section documents the subset Pathlab reads and writes.
 
 ## Layout
 

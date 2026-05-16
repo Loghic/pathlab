@@ -26,13 +26,13 @@ cargo install wasm-bindgen-cli
 rustup target add wasm32-unknown-unknown
 cargo build --release --target wasm32-unknown-unknown
 wasm-bindgen \
-    target/wasm32-unknown-unknown/release/maze_solver.wasm \
+    target/wasm32-unknown-unknown/release/pathlab.wasm \
     --out-dir dist --target web
 cp index.html dist/
 python3 -m http.server -d dist 8080
 ```
 
-The `index.html` imports `./maze_solver.js`, so the output names must
+The `index.html` imports `./pathlab.js`, so the output names must
 match — if you rename the binary in `Cargo.toml`, update the import too.
 
 ## The timing pitfall this project hit

@@ -1,4 +1,4 @@
-//! # maze_solver
+//! # pathlab
 //!
 //! A cross-platform pathfinding visualizer built on top of [`egui`].
 //!
