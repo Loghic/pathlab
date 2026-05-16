@@ -60,9 +60,9 @@ pub struct MazeApp {
     pub(super) solver: Option<Solver>,
     pub(super) last_step_time: Instant,
     pub(super) last_finish_time: Option<Instant>,
-    pub(super) auto_run: bool,         // single-shot "Solve"
-    pub(super) loop_mode: bool,        // restart after each finish
-    pub(super) step_pending: bool,     // single-step request
+    pub(super) auto_run: bool,     // single-shot "Solve"
+    pub(super) loop_mode: bool,    // restart after each finish
+    pub(super) step_pending: bool, // single-step request
 
     // ---- Interaction -----------------------------------------------
     pub(super) interaction: InteractionMode,
@@ -292,9 +292,7 @@ impl MazeApp {
                     s.step(&self.maze);
                     self.step_pending = false;
                     want_repaint = true;
-                } else if self.auto_run
-                    && now.duration_since(self.last_step_time) >= speed
-                {
+                } else if self.auto_run && now.duration_since(self.last_step_time) >= speed {
                     s.step(&self.maze);
                     self.last_step_time = now;
                     want_repaint = true;
@@ -374,8 +372,7 @@ impl eframe::App for MazeApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         // Global Ctrl/Cmd+Z hotkey. `consume_shortcut` returns true once
         // per press and clears the event so other widgets don't see it.
-        let undo_shortcut =
-            egui::KeyboardShortcut::new(egui::Modifiers::COMMAND, egui::Key::Z);
+        let undo_shortcut = egui::KeyboardShortcut::new(egui::Modifiers::COMMAND, egui::Key::Z);
         if ctx.input_mut(|i| i.consume_shortcut(&undo_shortcut)) {
             self.undo_last();
         }

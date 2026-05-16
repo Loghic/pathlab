@@ -12,7 +12,7 @@
 //!
 //! See `docs/` in the repository root for an architecture overview.
 
-pub mod mazes;
-pub mod solver;
 pub mod app;
+pub mod mazes;
 pub mod platform;
+pub mod solver;

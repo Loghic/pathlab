@@ -97,7 +97,9 @@ fn handle_input(
         app.snapshot_for_undo();
     }
 
-    let Some(pos) = response.interact_pointer_pos() else { return };
+    let Some(pos) = response.interact_pointer_pos() else {
+        return;
+    };
     if !maze_rect.contains(pos) {
         return;
     }
@@ -204,8 +206,7 @@ fn draw_solver_overlay(app: &MazeApp, painter: &egui::Painter, origin: egui::Pos
         if path.len() < 2 {
             continue;
         }
-        let points: Vec<egui::Pos2> =
-            path.iter().map(|&(c, r)| cell_center(c, r)).collect();
+        let points: Vec<egui::Pos2> = path.iter().map(|&(c, r)| cell_center(c, r)).collect();
 
         let colour = if solver.paths().len() <= 1 {
             PATH_COLOR
@@ -227,10 +228,7 @@ fn draw_solver_overlay(app: &MazeApp, painter: &egui::Painter, origin: egui::Pos
 /// Draw start and end on top of everything else so they're always
 /// visible, even when the path or open-set markers overlap them.
 fn draw_endpoints(app: &MazeApp, painter: &egui::Painter, origin: egui::Pos2) {
-    for (point, fill, label) in [
-        (app.start, START_FILL, "S"),
-        (app.end, END_FILL, "E"),
-    ] {
+    for (point, fill, label) in [(app.start, START_FILL, "S"), (app.end, END_FILL, "E")] {
         if point.x >= app.cols || point.y >= app.rows {
             continue;
         }

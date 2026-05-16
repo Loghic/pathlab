@@ -1,12 +1,12 @@
 //! Step-by-step pathfinder driving A*, BFS, and DFS over a [`MazeGrid`].
 
-use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap, HashSet, VecDeque};
 
-use crate::mazes::{Cell, MazeGrid};
 use super::algorithm::Algorithm;
 use super::heuristic::{Cost, Heuristic};
 use super::k_paths::k_shortest_paths;
+use crate::mazes::{Cell, MazeGrid};
 
 /// `(x, y)` grid coordinate.
 pub type Coord = (usize, usize);
@@ -61,9 +61,9 @@ pub struct Solver {
     status: SolverStatus,
 
     // Frontier - the right structure for each algorithm.
-    open_stack: Vec<Coord>,            // DFS
-    open_queue: VecDeque<Coord>,       // BFS
-    open_heap: BinaryHeap<OpenNode>,   // A*
+    open_stack: Vec<Coord>,          // DFS
+    open_queue: VecDeque<Coord>,     // BFS
+    open_heap: BinaryHeap<OpenNode>, // A*
 
     // Membership index for the frontier - O(1) `contains` checks.
     open_set: HashSet<Coord>,
@@ -209,8 +209,8 @@ impl Solver {
                     }
                 }
                 Algorithm::AStar => {
-                    let tentative_g = self.g_score.get(&current).copied().unwrap_or(Cost::MAX)
-                        + 1.0;
+                    let tentative_g =
+                        self.g_score.get(&current).copied().unwrap_or(Cost::MAX) + 1.0;
 
                     let known_g = self
                         .g_score
@@ -406,8 +406,8 @@ mod tests {
     #[test]
     fn k_shortest_returns_multiple_paths() {
         let maze = maze_open(3, 3);
-        let mut s = Solver::new(Algorithm::KShortest, Heuristic::Manhattan, (0, 0), (2, 2))
-            .with_k(4);
+        let mut s =
+            Solver::new(Algorithm::KShortest, Heuristic::Manhattan, (0, 0), (2, 2)).with_k(4);
         // One step is enough; KShortest runs to completion in one call.
         s.step(&maze);
         assert!(s.finished());

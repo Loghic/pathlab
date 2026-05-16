@@ -136,15 +136,15 @@ pub fn save_maze(maze: &MazeGrid) {
     let array = js_sys::Array::new();
     array.push(&wasm_bindgen::JsValue::from_str(&pbm));
 
-    let Ok(blob) = Blob::new_with_str_sequence(&array) else { return };
-    let Ok(url) = Url::create_object_url_with_blob(&blob) else { return };
+    let Ok(blob) = Blob::new_with_str_sequence(&array) else {
+        return;
+    };
+    let Ok(url) = Url::create_object_url_with_blob(&blob) else {
+        return;
+    };
 
     let document = web_sys::window().unwrap().document().unwrap();
-    let anchor: HtmlAnchorElement = document
-        .create_element("a")
-        .unwrap()
-        .dyn_into()
-        .unwrap();
+    let anchor: HtmlAnchorElement = document.create_element("a").unwrap().dyn_into().unwrap();
     anchor.set_href(&url);
     anchor.set_download("maze.pbm");
     anchor.click();

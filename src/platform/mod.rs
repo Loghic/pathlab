@@ -4,5 +4,5 @@
 //! - [`fileio`] exposes a uniform "open a maze file" / "save a maze file"
 //!   API that picks the right implementation at compile time.
 
-pub mod time;
 pub mod fileio;
+pub mod time;

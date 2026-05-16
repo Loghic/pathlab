@@ -53,7 +53,11 @@ fn section_endpoints(app: &mut MazeApp, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.add(egui::DragValue::new(&mut app.start.x).range(0..=app.cols.saturating_sub(1)));
             ui.add(egui::DragValue::new(&mut app.start.y).range(0..=app.rows.saturating_sub(1)));
-            let col = if app.interaction == InteractionMode::PickStart { active } else { inactive };
+            let col = if app.interaction == InteractionMode::PickStart {
+                active
+            } else {
+                inactive
+            };
             if ui.add(egui::Button::new("Pick").fill(col)).clicked() {
                 app.interaction = if app.interaction == InteractionMode::PickStart {
                     InteractionMode::None
@@ -69,7 +73,11 @@ fn section_endpoints(app: &mut MazeApp, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.add(egui::DragValue::new(&mut app.end.x).range(0..=app.cols.saturating_sub(1)));
             ui.add(egui::DragValue::new(&mut app.end.y).range(0..=app.rows.saturating_sub(1)));
-            let col = if app.interaction == InteractionMode::PickEnd { active } else { inactive };
+            let col = if app.interaction == InteractionMode::PickEnd {
+                active
+            } else {
+                inactive
+            };
             if ui.add(egui::Button::new("Pick").fill(col)).clicked() {
                 app.interaction = if app.interaction == InteractionMode::PickEnd {
                     InteractionMode::None
@@ -208,7 +216,11 @@ fn section_editing(app: &mut MazeApp, ui: &mut egui::Ui) {
     ui.heading("Edit");
 
     ui.horizontal(|ui| {
-        let col = if app.interaction == InteractionMode::DrawWall { active } else { inactive };
+        let col = if app.interaction == InteractionMode::DrawWall {
+            active
+        } else {
+            inactive
+        };
         if ui.add(egui::Button::new("Draw wall").fill(col)).clicked() {
             app.interaction = if app.interaction == InteractionMode::DrawWall {
                 InteractionMode::None
@@ -216,7 +228,11 @@ fn section_editing(app: &mut MazeApp, ui: &mut egui::Ui) {
                 InteractionMode::DrawWall
             };
         }
-        let col = if app.interaction == InteractionMode::EraseWall { active } else { inactive };
+        let col = if app.interaction == InteractionMode::EraseWall {
+            active
+        } else {
+            inactive
+        };
         if ui.add(egui::Button::new("Erase wall").fill(col)).clicked() {
             app.interaction = if app.interaction == InteractionMode::EraseWall {
                 InteractionMode::None

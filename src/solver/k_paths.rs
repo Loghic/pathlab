@@ -36,12 +36,7 @@ use super::solver::Coord;
 
 /// Find at most `k` shortest distinct loopless paths from `start` to
 /// `goal`. Returns an empty vec if no path exists.
-pub fn k_shortest_paths(
-    maze: &MazeGrid,
-    start: Coord,
-    goal: Coord,
-    k: usize,
-) -> Vec<Vec<Coord>> {
+pub fn k_shortest_paths(maze: &MazeGrid, start: Coord, goal: Coord, k: usize) -> Vec<Vec<Coord>> {
     if k == 0 {
         return Vec::new();
     }
@@ -76,11 +71,13 @@ pub fn k_shortest_paths(
 
             // Nodes in the root path (except the spur node itself) are
             // off-limits so the spur path stays loopless.
-            let banned_nodes: HashSet<Coord> =
-                root_path.iter().copied().filter(|&c| c != spur_node).collect();
+            let banned_nodes: HashSet<Coord> = root_path
+                .iter()
+                .copied()
+                .filter(|&c| c != spur_node)
+                .collect();
 
-            let Some(spur) = bfs(maze, spur_node, goal, &banned_nodes, &banned_edges)
-            else {
+            let Some(spur) = bfs(maze, spur_node, goal, &banned_nodes, &banned_edges) else {
                 continue;
             };
 
@@ -124,10 +121,7 @@ fn bfs(
     let width = if height > 0 { maze[0].len() } else { 0 };
 
     let walkable = |c: Coord| -> bool {
-        c.0 < width
-            && c.1 < height
-            && maze[c.1][c.0] != Cell::Wall
-            && !banned_nodes.contains(&c)
+        c.0 < width && c.1 < height && maze[c.1][c.0] != Cell::Wall && !banned_nodes.contains(&c)
     };
 
     // The start may be banned (it's the spur node, so it's allowed) or
