@@ -59,3 +59,47 @@ impl Algorithm {
         matches!(self, Algorithm::KShortest)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn all_lists_every_variant_with_unique_labels() {
+        let variants = Algorithm::all();
+        assert_eq!(variants.len(), 4);
+        let labels: Vec<&str> = variants.iter().map(|a| a.label()).collect();
+        // Compare every distinct pair.
+        for (i, a) in labels.iter().enumerate() {
+            for b in labels.iter().skip(i + 1) {
+                assert_ne!(a, b, "duplicate label: {a}");
+            }
+        }
+    }
+
+    #[test]
+    fn capability_predicates_agree_with_intent() {
+        // Only A* uses a heuristic.
+        for &a in Algorithm::all() {
+            let expected = matches!(a, Algorithm::AStar);
+            assert_eq!(a.uses_heuristic(), expected, "{:?}", a);
+        }
+        // Only K-Shortest is multi-path.
+        for &a in Algorithm::all() {
+            let expected = matches!(a, Algorithm::KShortest);
+            assert_eq!(a.is_multi_path(), expected, "{:?}", a);
+        }
+        // K-Shortest is the only one that doesn't step.
+        for &a in Algorithm::all() {
+            let expected = !matches!(a, Algorithm::KShortest);
+            assert_eq!(a.supports_stepping(), expected, "{:?}", a);
+        }
+    }
+
+    #[test]
+    fn default_is_astar() {
+        // App boots with A* selected; pin to avoid quietly changing
+        // first-launch UX.
+        assert_eq!(Algorithm::default(), Algorithm::AStar);
+    }
+}

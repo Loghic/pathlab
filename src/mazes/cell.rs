@@ -28,3 +28,28 @@ impl Cell {
 
 /// A maze is a rectangular grid of [`Cell`]s indexed `maze[y][x]`.
 pub type MazeGrid = Vec<Vec<Cell>>;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn is_walkable_matches_empty() {
+        assert!(Cell::Empty.is_walkable());
+        assert!(!Cell::Wall.is_walkable());
+    }
+
+    #[test]
+    fn invert_is_an_involution() {
+        // Inverting twice must be the identity for every variant.
+        for c in [Cell::Empty, Cell::Wall] {
+            assert_eq!(c.invert().invert(), c);
+        }
+    }
+
+    #[test]
+    fn invert_swaps_variants() {
+        assert_eq!(Cell::Empty.invert(), Cell::Wall);
+        assert_eq!(Cell::Wall.invert(), Cell::Empty);
+    }
+}

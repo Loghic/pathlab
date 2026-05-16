@@ -123,3 +123,167 @@ pub fn maze_starting() -> MazeGrid {
         })
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Helper: assert that every row of a maze has the same length, and
+    /// returns `(rows, cols)`.
+    fn rectangular_dims(maze: &MazeGrid) -> (usize, usize) {
+        let rows = maze.len();
+        let cols = maze.first().map(|r| r.len()).unwrap_or(0);
+        for (i, row) in maze.iter().enumerate() {
+            assert_eq!(row.len(), cols, "row {i} has irregular width");
+        }
+        (rows, cols)
+    }
+
+    // ---- maze_open --------------------------------------------------
+
+    #[test]
+    fn open_has_requested_dimensions() {
+        let m = maze_open(7, 4);
+        assert_eq!(rectangular_dims(&m), (7, 4));
+    }
+
+    #[test]
+    fn open_is_all_empty() {
+        let m = maze_open(5, 5);
+        for row in &m {
+            for &cell in row {
+                assert_eq!(cell, Cell::Empty);
+            }
+        }
+    }
+
+    #[test]
+    fn open_clamps_zero_to_one() {
+        // Zero-sized mazes break the renderer; the generator clamps up
+        // to the smallest non-empty grid. Pinning the behaviour because
+        // the UI relies on `rows.max(1)`.
+        let m = maze_open(0, 0);
+        assert_eq!(rectangular_dims(&m), (1, 1));
+    }
+
+    // ---- maze_wall_split -------------------------------------------
+
+    #[test]
+    fn wall_split_has_a_gap_in_the_middle_row() {
+        let rows = 5;
+        let cols = 7;
+        let m = maze_wall_split(rows, cols);
+        let mid_col = cols / 2;
+        let mid_row = rows / 2;
+        // Every row except the middle one has a wall at the centre column.
+        for (y, row) in m.iter().enumerate() {
+            if y == mid_row {
+                assert_eq!(row[mid_col], Cell::Empty, "gap row should be empty");
+            } else {
+                assert_eq!(row[mid_col], Cell::Wall, "row {y} centre should be a wall");
+            }
+        }
+    }
+
+    #[test]
+    fn wall_split_is_solvable_through_the_gap() {
+        // Sanity: BFS should be able to traverse from left to right.
+        use crate::solver::{Algorithm, Heuristic, Solver, SolverStatus};
+        let m = maze_wall_split(5, 5);
+        let mut s = Solver::new(Algorithm::BFS, Heuristic::Manhattan, (0, 0), (4, 0));
+        for _ in 0..200 {
+            s.step(&m);
+            if s.finished() {
+                break;
+            }
+        }
+        assert_eq!(s.status(), SolverStatus::Found);
+    }
+
+    // ---- maze_boxed ------------------------------------------------
+
+    #[test]
+    fn boxed_has_full_border_of_walls() {
+        let rows = 8;
+        let cols = 10;
+        let m = maze_boxed(rows, cols);
+        assert_eq!(rectangular_dims(&m), (rows, cols));
+
+        // Top and bottom rows are entirely walls.
+        assert!(
+            m.first().unwrap().iter().all(|&c| c == Cell::Wall),
+            "top border"
+        );
+        assert!(
+            m.last().unwrap().iter().all(|&c| c == Cell::Wall),
+            "bottom border"
+        );
+
+        // Left and right columns of every row are walls.
+        for (y, row) in m.iter().enumerate() {
+            assert_eq!(row[0], Cell::Wall, "row {y} left border");
+            assert_eq!(*row.last().unwrap(), Cell::Wall, "row {y} right border");
+        }
+    }
+
+    #[test]
+    fn boxed_clamps_tiny_input_to_minimum() {
+        // Smaller than 3x3 would have no interior; the generator floors
+        // both dimensions at 3. Pin this so the UI's resize buttons
+        // stay safe.
+        let m = maze_boxed(1, 1);
+        assert_eq!(rectangular_dims(&m), (3, 3));
+    }
+
+    // ---- maze_starting ---------------------------------------------
+
+    #[test]
+    fn starting_maze_dimensions_are_pinned() {
+        // The default app launches into this and its endpoints assume
+        // these dimensions, so changing them is a UX-breaking change.
+        let m = maze_starting();
+        assert_eq!(rectangular_dims(&m), (10, 10));
+    }
+
+    #[test]
+    fn starting_maze_has_default_endpoints_walkable() {
+        // The MazeApp::default impl puts start at (1,1) and end at (8,7).
+        // If either lands on a wall, the demo won't solve. Pin it.
+        let m = maze_starting();
+        assert_eq!(m[1][1], Cell::Empty, "start cell must be walkable");
+        assert_eq!(m[7][8], Cell::Empty, "end cell must be walkable");
+    }
+
+    // ---- BuiltinMaze dispatch --------------------------------------
+
+    #[test]
+    fn list_builtin_covers_every_variant() {
+        // If someone adds a new BuiltinMaze variant but forgets to put
+        // it in list_builtin, the UI dropdown silently misses it. This
+        // test fails loudly when the count drifts.
+        assert_eq!(list_builtin().len(), 4);
+    }
+
+    #[test]
+    fn every_builtin_label_is_unique_and_non_empty() {
+        let labels: Vec<&str> = list_builtin().iter().map(|m| m.label()).collect();
+        for &l in &labels {
+            assert!(!l.is_empty(), "empty label");
+        }
+        // Uniqueness — duplicate labels would confuse the dropdown.
+        for (i, a) in labels.iter().enumerate() {
+            for b in labels.iter().skip(i + 1) {
+                assert_ne!(a, b, "duplicate label: {a}");
+            }
+        }
+    }
+
+    #[test]
+    fn every_builtin_generates_a_non_empty_maze() {
+        for &b in list_builtin() {
+            let m = b.generate(10, 10);
+            let (rows, cols) = rectangular_dims(&m);
+            assert!(rows > 0 && cols > 0, "{:?} produced empty maze", b);
+        }
+    }
+}

@@ -426,4 +426,99 @@ mod tests {
         assert_eq!(s.paths().len(), 1);
         assert_eq!(s.paths()[0], s.path());
     }
+
+    // ---- Edge cases that the UI can produce -------------------------
+
+    #[test]
+    fn start_equals_goal_returns_single_cell_path() {
+        // User can drag the end onto the start. Expected behaviour:
+        // immediately Found, with a path of length 1.
+        let maze = maze_open(3, 3);
+        for &algo in &[Algorithm::AStar, Algorithm::BFS, Algorithm::DFS] {
+            let mut s = Solver::new(algo, Heuristic::Manhattan, (1, 1), (1, 1));
+            solve_to_completion(&mut s, &maze);
+            assert_eq!(s.status(), SolverStatus::Found, "{algo:?}");
+            assert_eq!(s.path(), &[(1, 1)], "{algo:?}");
+        }
+    }
+
+    #[test]
+    fn start_on_a_wall_eventually_finishes() {
+        // The UI doesn't prevent picking a wall cell. Whatever the
+        // outcome (NoPath for sure, since the start can't expand),
+        // the solver must not loop forever.
+        let mut maze = maze_open(4, 4);
+        maze[0][0] = Cell::Wall;
+        for &algo in &[Algorithm::AStar, Algorithm::BFS, Algorithm::DFS] {
+            let mut s = Solver::new(algo, Heuristic::Manhattan, (0, 0), (3, 3));
+            solve_to_completion(&mut s, &maze);
+            assert!(s.finished(), "{algo:?} must terminate");
+        }
+    }
+
+    #[test]
+    fn goal_on_a_wall_reports_no_path() {
+        let mut maze = maze_open(4, 4);
+        maze[3][3] = Cell::Wall;
+        for &algo in &[Algorithm::AStar, Algorithm::BFS, Algorithm::DFS] {
+            let mut s = Solver::new(algo, Heuristic::Manhattan, (0, 0), (3, 3));
+            solve_to_completion(&mut s, &maze);
+            assert_eq!(s.status(), SolverStatus::NoPath, "{algo:?}");
+        }
+    }
+
+    #[test]
+    fn step_after_finish_is_a_noop() {
+        // tick_solver may keep calling step() for a frame or two after
+        // the solver finished (UI doesn't peek). The path must not
+        // mutate after the Found transition.
+        let maze = maze_open(3, 3);
+        let mut s = Solver::new(Algorithm::BFS, Heuristic::Manhattan, (0, 0), (2, 2));
+        solve_to_completion(&mut s, &maze);
+        let snapshot = s.path().to_vec();
+        for _ in 0..5 {
+            s.step(&maze);
+        }
+        assert_eq!(s.path(), snapshot);
+    }
+
+    #[test]
+    fn k_shortest_paths_are_sorted_by_length() {
+        let maze = maze_open(4, 4);
+        let mut s =
+            Solver::new(Algorithm::KShortest, Heuristic::Manhattan, (0, 0), (3, 3)).with_k(6);
+        s.step(&maze);
+        assert!(s.finished());
+        for w in s.paths().windows(2) {
+            assert!(w[0].len() <= w[1].len(), "paths not sorted by length");
+        }
+    }
+
+    #[test]
+    fn with_k_clamps_zero_to_one() {
+        // Defence in depth: the UI clamps k to [1,32] via DragValue::range,
+        // but the solver's `with_k` also floors at 1 so direct API users
+        // can't accidentally get zero paths back from a finished search.
+        let maze = maze_open(3, 3);
+        let mut s =
+            Solver::new(Algorithm::KShortest, Heuristic::Manhattan, (0, 0), (2, 2)).with_k(0);
+        s.step(&maze);
+        assert_eq!(s.status(), SolverStatus::Found);
+        assert!(!s.paths().is_empty());
+    }
+
+    #[test]
+    fn k_shortest_no_path_when_disconnected() {
+        // Bisect the maze.
+        let mut maze = maze_open(3, 5);
+        for row in maze.iter_mut().take(3) {
+            row[2] = Cell::Wall;
+        }
+        let mut s =
+            Solver::new(Algorithm::KShortest, Heuristic::Manhattan, (0, 0), (4, 2)).with_k(3);
+        s.step(&maze);
+        assert!(s.finished());
+        assert_eq!(s.status(), SolverStatus::NoPath);
+        assert!(s.paths().is_empty());
+    }
 }

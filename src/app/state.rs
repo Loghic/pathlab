@@ -389,3 +389,213 @@ impl eframe::App for MazeApp {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    //! These tests only exercise pure-logic methods on `MazeApp` -
+    //! ones that mutate the grid, endpoints, or undo stack without
+    //! talking to egui. The egui-dependent code (panels, canvas
+    //! drawing, tick_solver's interaction with the egui Context) is
+    //! deliberately out of scope; see AGENTS.md.
+
+    use super::*;
+    use crate::mazes::Cell;
+
+    fn app() -> MazeApp {
+        MazeApp::default()
+    }
+
+    // ---- Endpoint clamping ------------------------------------------
+
+    #[test]
+    fn clamp_endpoints_pulls_back_into_bounds() {
+        let mut a = app();
+        a.rows = 5;
+        a.cols = 4;
+        a.start.x = 99;
+        a.start.y = 99;
+        a.end.x = 99;
+        a.end.y = 99;
+        a.clamp_endpoints();
+        assert_eq!(a.start.x, 3);
+        assert_eq!(a.start.y, 4);
+        assert_eq!(a.end.x, 3);
+        assert_eq!(a.end.y, 4);
+    }
+
+    #[test]
+    fn clamp_endpoints_with_empty_maze_pins_to_zero() {
+        // saturating_sub means a 0-row/col maze clamps to (0,0).
+        let mut a = app();
+        a.rows = 0;
+        a.cols = 0;
+        a.start.x = 10;
+        a.start.y = 10;
+        a.clamp_endpoints();
+        assert_eq!((a.start.x, a.start.y), (0, 0));
+    }
+
+    // ---- Resize -----------------------------------------------------
+
+    #[test]
+    fn add_row_appends_and_increments() {
+        let mut a = app();
+        let before_rows = a.rows;
+        let before_cols = a.cols;
+        a.add_row(Cell::Wall);
+        assert_eq!(a.rows, before_rows + 1);
+        assert_eq!(a.cols, before_cols);
+        assert_eq!(a.maze.len(), a.rows);
+        assert!(a.maze.last().unwrap().iter().all(|&c| c == Cell::Wall));
+    }
+
+    #[test]
+    fn add_col_extends_every_row() {
+        let mut a = app();
+        let before_cols = a.cols;
+        a.add_col(Cell::Empty);
+        assert_eq!(a.cols, before_cols + 1);
+        for row in &a.maze {
+            assert_eq!(row.len(), a.cols);
+            assert_eq!(*row.last().unwrap(), Cell::Empty);
+        }
+    }
+
+    #[test]
+    fn remove_row_refuses_below_one() {
+        let mut a = app();
+        // Shrink to one row by repeated removal.
+        while a.rows > 1 {
+            a.remove_row();
+        }
+        let len_before = a.maze.len();
+        a.remove_row(); // should be a no-op
+        assert_eq!(a.maze.len(), len_before);
+        assert_eq!(a.rows, 1);
+    }
+
+    #[test]
+    fn remove_col_refuses_below_one() {
+        let mut a = app();
+        while a.cols > 1 {
+            a.remove_col();
+        }
+        let cols_before = a.cols;
+        a.remove_col();
+        assert_eq!(a.cols, cols_before);
+        for row in &a.maze {
+            assert_eq!(row.len(), 1);
+        }
+    }
+
+    #[test]
+    fn remove_row_clamps_endpoints() {
+        let mut a = app();
+        // Push the end to the last row, then remove that row.
+        a.end.y = a.rows - 1;
+        let original_end_y = a.end.y;
+        a.remove_row();
+        assert!(a.end.y < original_end_y || a.end.y < a.rows);
+    }
+
+    // ---- Bulk mutators ----------------------------------------------
+
+    #[test]
+    fn fill_with_paints_every_cell() {
+        let mut a = app();
+        a.fill_with(Cell::Wall);
+        for row in &a.maze {
+            for &c in row {
+                assert_eq!(c, Cell::Wall);
+            }
+        }
+    }
+
+    #[test]
+    fn invert_maze_swaps_every_cell() {
+        let mut a = app();
+        let before: Vec<Vec<Cell>> = a.maze.clone();
+        a.invert_maze();
+        for (row_b, row_a) in before.iter().zip(a.maze.iter()) {
+            for (b, c) in row_b.iter().zip(row_a.iter()) {
+                assert_eq!(*c, b.invert());
+            }
+        }
+    }
+
+    #[test]
+    fn invert_twice_is_identity() {
+        let mut a = app();
+        let before = a.maze.clone();
+        a.invert_maze();
+        a.invert_maze();
+        assert_eq!(a.maze, before);
+    }
+
+    // ---- Undo integration ------------------------------------------
+
+    #[test]
+    fn fill_then_undo_restores_previous_maze() {
+        let mut a = app();
+        let before = a.maze.clone();
+        a.fill_with(Cell::Wall);
+        assert_ne!(a.maze, before, "fill must have actually changed something");
+        assert!(a.undo_last());
+        assert_eq!(a.maze, before);
+    }
+
+    #[test]
+    fn invert_then_undo_restores_previous_maze() {
+        let mut a = app();
+        let before = a.maze.clone();
+        a.invert_maze();
+        assert!(a.undo_last());
+        assert_eq!(a.maze, before);
+    }
+
+    #[test]
+    fn undo_without_history_returns_false() {
+        let mut a = app();
+        // Fresh app, no edits yet.
+        assert!(!a.undo_last());
+    }
+
+    #[test]
+    fn add_row_then_undo_restores_dimensions() {
+        let mut a = app();
+        let (rows, cols) = (a.rows, a.cols);
+        a.add_row(Cell::Wall);
+        assert_eq!(a.rows, rows + 1);
+        a.undo_last();
+        assert_eq!(a.rows, rows);
+        assert_eq!(a.cols, cols);
+    }
+
+    #[test]
+    fn solver_factory_uses_current_endpoints() {
+        let mut a = app();
+        a.start.x = 2;
+        a.start.y = 3;
+        a.end.x = 5;
+        a.end.y = 6;
+        let s = a.new_solver();
+        // The solver path is empty before stepping; we just verify the
+        // construction succeeded with no panic.
+        assert_eq!(s.algorithm(), a.algorithm);
+        assert!(!s.finished());
+    }
+
+    #[test]
+    fn clear_solver_resets_state() {
+        let mut a = app();
+        a.solver = Some(a.new_solver());
+        a.auto_run = true;
+        a.step_pending = true;
+        a.last_finish_time = Some(Instant::now());
+        a.clear_solver();
+        assert!(a.solver.is_none());
+        assert!(!a.auto_run);
+        assert!(!a.step_pending);
+        assert!(a.last_finish_time.is_none());
+    }
+}
