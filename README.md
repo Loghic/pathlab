@@ -4,8 +4,10 @@ A cross-platform pathfinding visualizer built in Rust with [`egui`]/`eframe`.
 Runs natively (Windows / macOS / Linux) **and** in the browser via WebAssembly
 from the same codebase.
 
-![status](https://img.shields.io/badge/status-pre--release-orange)
-![rust](https://img.shields.io/badge/rust-1.74%2B-blue)
+[![ci](https://github.com/loghi/pathlab/actions/workflows/ci.yml/badge.svg)](https://github.com/loghi/pathlab/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/loghi/pathlab/branch/main/graph/badge.svg)](https://codecov.io/gh/loghi/pathlab)
+![rust](https://img.shields.io/badge/rust-1.95.0-blue)
+![license](https://img.shields.io/badge/license-MIT-blue)
 
 ## Features
 
@@ -15,7 +17,7 @@ from the same codebase.
 - **Selectable heuristics for A***: Manhattan, Euclidean, Chebyshev, and Zero
   (which collapses A* into Dijkstra).
 - **K-Shortest paths visualisation** — pick a `k` between 1 and 32 and
-  the canvas renders every distinct path in[118;1:3u its own colour, drawn
+  the canvas renders every distinct path in its own colour, drawn
   longest-to-shortest so the optimal route stays on top.
 - **Built-in maze presets** plus an in-app **wall editor** (draw / erase /
   fill / invert).
@@ -124,13 +126,23 @@ heuristic is symmetric — a regression test for an axis-mix bug that
 lived in v0.1) and the undo stack (push deduping, bounded depth, FIFO
 eviction).
 
-GitHub Actions runs three jobs on every push / PR:
+GitHub Actions runs four jobs on every push / PR (status visible at the
+top of this README):
 
 - `lint` — `cargo fmt --check` and `cargo clippy --all-targets -D warnings`.
 - `test` — `cargo test` on Linux / macOS / Windows.
 - `wasm-check` — `cargo check --target wasm32-unknown-unknown` so a
   desktop-only API call (e.g. `std::time::Instant`) is caught
   immediately, not at deploy time.
+- `coverage` — runs the test suite under
+  [`cargo-llvm-cov`](https://github.com/taiki-e/cargo-llvm-cov) and
+  uploads an LCOV report to [Codecov](https://codecov.io/gh/loghi/a_star).
+  Reading coverage on this project: the solver and undo modules sit
+  near 100% because their tests are exhaustive; the `app/` and
+  `platform/` modules sit much lower because they're driven by egui
+  events and OS dialogs that unit tests can't easily exercise. Aim
+  for high coverage on the pure-logic crates; don't chase it on the
+  UI shell.
 
 End-to-end GUI testing isn't included on purpose: the solver and undo
 stack are the parts where bugs hide and they're 100% testable as pure
@@ -186,6 +198,25 @@ cargo clippy --fix --allow-dirty --allow-staged --all-targets --all-features
 cargo clippy --all-targets --all-features -- -D warnings   # confirm
 cargo test
 ```
+
+### Running coverage locally
+
+The same tool CI uses is installable as a cargo subcommand:
+
+```bash
+cargo install cargo-llvm-cov
+rustup component add llvm-tools-preview
+
+# Print a per-file summary to the terminal.
+cargo llvm-cov --all-features
+
+# Open an interactive HTML report in your browser.
+cargo llvm-cov --all-features --open
+```
+
+The HTML report highlights covered lines green and uncovered ones red.
+Useful when you've just added a feature and want to confirm the new
+branches actually run.
 
 ### Local pre-commit hook
 
