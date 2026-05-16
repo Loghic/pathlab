@@ -36,8 +36,8 @@ from the same codebase.
 ### Native
 
 ```bash
-git clone <this repo>
-cd maze-solver
+git clone https://github.com/Loghic/pathlab
+cd pathlab
 cargo run --release
 ```
 
