@@ -120,11 +120,28 @@ pathlab/
 cargo test
 ```
 
-Unit tests cover the solver (A* and BFS agree on shortest-path length on
-open grids; "no path" is reported when one is impossible; the Manhattan
-heuristic is symmetric — a regression test for an axis-mix bug that
-lived in v0.1) and the undo stack (push deduping, bounded depth, FIFO
-eviction).
+Unit tests cover:
+
+- **`solver/`** — A* and BFS agree on shortest-path length on open
+  grids; "no path" is reported when one is impossible; the Manhattan
+  heuristic is symmetric (a regression test for an axis-mix bug that
+  lived in v0.1); edge cases including `start == goal`, start on a
+  wall, goal on a wall, and step-after-finish being a no-op; Yen's
+  k-shortest paths is sorted by length, handles k=0 defensively, and
+  returns nothing for a disconnected grid.
+- **`mazes/`** — every built-in preset produces a rectangular grid of
+  the requested dimensions; the boxed preset has a full wall border;
+  the wall-split preset is solvable through its gap; the PBM parser
+  round-trips a maze through serialize→parse with no loss.
+- **`app/undo.rs`** — push deduping, bounded depth, FIFO eviction.
+- **`app/state.rs`** — every pure mutator (clamp, resize, fill,
+  invert) plus their integration with the undo stack.
+
+The egui-rendering code (`app/canvas.rs`, `app/side_panel.rs`,
+`app/top_bar.rs`) and platform glue (`platform/fileio.rs`) are not
+unit-tested. They're driven by mouse events and OS dialogs that a
+unit test can't meaningfully exercise; see "Reading coverage"
+below.
 
 GitHub Actions runs four jobs on every push / PR (status visible at the
 top of this README):
@@ -137,12 +154,13 @@ top of this README):
 - `coverage` — runs the test suite under
   [`cargo-llvm-cov`](https://github.com/taiki-e/cargo-llvm-cov) and
   uploads an LCOV report to [Codecov](https://codecov.io/gh/Loghic/pathlab).
-  Reading coverage on this project: the solver and undo modules sit
-  near 100% because their tests are exhaustive; the `app/` and
-  `platform/` modules sit much lower because they're driven by egui
-  events and OS dialogs that unit tests can't easily exercise. Aim
-  for high coverage on the pure-logic crates; don't chase it on the
-  UI shell.
+  **Reading coverage on this project**: expect ~60% overall. The
+  solver, mazes, and undo modules sit near 90-100% because their
+  tests are exhaustive. The `app/` rendering code and `platform/`
+  glue sit near 0% because they're driven by egui events and OS
+  dialogs that unit tests can't exercise without a headless GUI
+  harness. Aim for high coverage on the pure-logic modules; don't
+  chase the global number by adding tests for the UI shell.
 
 End-to-end GUI testing isn't included on purpose: the solver and undo
 stack are the parts where bugs hide and they're 100% testable as pure
