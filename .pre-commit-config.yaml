@@ -1,0 +1,37 @@
+# Config for https://pre-commit.com — install once with:
+#   pip install pre-commit && pre-commit install
+#
+# Contributors who don't use pre-commit can install the equivalent
+# native git hook with:
+#   ./scripts/install-hooks.sh
+#
+# Both paths run the same three checks CI runs:
+#   cargo fmt --check, cargo clippy -D warnings, cargo test.
+
+repos:
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt --check
+        entry: cargo fmt --all -- --check
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-clippy
+        name: cargo clippy -D warnings
+        entry: cargo clippy --all-targets --all-features -- -D warnings
+        language: system
+        types: [rust]
+        pass_filenames: false
+
+      - id: cargo-test
+        name: cargo test
+        entry: cargo test --all-features
+        language: system
+        types: [rust]
+        pass_filenames: false
+        # Tests are the slowest hook. If you commit often and tests take
+        # noticeable time, you can disable this one specific hook with
+        #   SKIP=cargo-test git commit ...
+        # or comment out the block.

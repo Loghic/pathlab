@@ -80,12 +80,11 @@ pub fn maze_boxed(rows: usize, cols: usize) -> MazeGrid {
     let cols = cols.max(3);
     let mut maze = vec![vec![Cell::Empty; cols]; rows];
 
-    // Outer border.
-    for x in 0..cols {
-        maze[0][x] = Cell::Wall;
-        maze[rows - 1][x] = Cell::Wall;
-    }
-    for line in maze.iter_mut().take(rows) {
+    // Outer border. The top and bottom rows are filled with walls;
+    // the left and right columns of every row likewise.
+    maze[0].fill(Cell::Wall);
+    maze[rows - 1].fill(Cell::Wall);
+    for line in maze.iter_mut() {
         line[0] = Cell::Wall;
         line[cols - 1] = Cell::Wall;
     }

@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#
+# pre-commit hook for maze_solver
+# Run from anywhere; the script cd's to the repo root.
+#
+# Stages (run in order, abort on first failure):
+#   1. cargo fmt --check  - formatting must already be applied
+#   2. cargo clippy       - no warnings (CI rejects them)
+#   3. cargo test         - all tests pass
+#
+# To skip the hook for a single commit (e.g. WIP):
+#   git commit --no-verify
+#
+# To re-enable: nothing — --no-verify only affects that one commit.
+
+set -euo pipefail
+
+# Move to repo root so cargo finds Cargo.toml regardless of where we
+# were invoked from (some GUI clients run hooks from odd cwds).
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+# Colours (only if stdout is a terminal — keeps CI logs clean).
+if [ -t 1 ]; then
+    BOLD=$(printf '\033[1m')
+    GREEN=$(printf '\033[32m')
+    RED=$(printf '\033[31m')
+    YELLOW=$(printf '\033[33m')
+    RESET=$(printf '\033[0m')
+else
+    BOLD="" GREEN="" RED="" YELLOW="" RESET=""
+fi
+
+step() {
+    printf '\n%s>>> %s%s\n' "$BOLD" "$1" "$RESET"
+}
+
+fail() {
+    printf '\n%s%s pre-commit failed: %s%s\n' "$RED" "$BOLD" "$1" "$RESET" >&2
+    printf '%sIf you need to bypass this hook (e.g. WIP commit):%s\n' "$YELLOW" "$RESET" >&2
+    printf '%s    git commit --no-verify%s\n\n' "$YELLOW" "$RESET" >&2
+    exit 1
+}
+
+# ----- 1. fmt -----------------------------------------------------------
+step "cargo fmt --all -- --check"
+if ! cargo fmt --all -- --check; then
+    printf '\n%sFormatting issues. Run:%s\n' "$YELLOW" "$RESET" >&2
+    printf '%s    cargo fmt --all%s\n' "$YELLOW" "$RESET" >&2
+    printf '%sthen re-stage and commit.%s\n' "$YELLOW" "$RESET" >&2
+    fail "rustfmt found unformatted code"
+fi
+
+# ----- 2. clippy --------------------------------------------------------
+step "cargo clippy --all-targets --all-features -- -D warnings"
+if ! cargo clippy --all-targets --all-features -- -D warnings; then
+    fail "clippy emitted warnings"
+fi
+
+# ----- 3. tests ---------------------------------------------------------
+step "cargo test --all-features"
+if ! cargo test --all-features; then
+    fail "tests failed"
+fi
+
+printf '\n%s%s✓ pre-commit checks passed%s\n\n' "$GREEN" "$BOLD" "$RESET"
+

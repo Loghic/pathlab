@@ -32,7 +32,7 @@ use std::collections::{HashSet, VecDeque};
 
 use crate::mazes::{Cell, MazeGrid};
 
-use super::solver::Coord;
+use super::core::Coord;
 
 /// Find at most `k` shortest distinct loopless paths from `start` to
 /// `goal`. Returns an empty vec if no path exists.

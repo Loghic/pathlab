@@ -148,6 +148,13 @@ on every push. If you change `Cargo.toml` or `src/platform/`, run
 the wasm check locally before pushing — it's the cheapest way to
 catch "compiled fine on my laptop, broken in the browser" bugs.
 
+If a pre-commit hook is installed (`scripts/install-hooks.sh` or
+`pre-commit install`), `cargo fmt --check`, `cargo clippy -D warnings`,
+and `cargo test` run automatically before each commit. Trust the hook:
+if it rejects a commit, fix the underlying issue rather than bypassing
+it. The only legitimate reason to use `git commit --no-verify` is a
+genuine WIP push to a personal branch.
+
 ## egui version pin
 
 The crate uses `eframe = "0.33"` / `egui_extras = "0.33"`. Two API

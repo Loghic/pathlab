@@ -201,7 +201,7 @@ fn format_dwell(ms: u32) -> String {
         "instant".to_string()
     } else if ms < 1000 {
         format!("{ms} ms")
-    } else if ms % 1000 == 0 {
+    } else if ms.is_multiple_of(1000) {
         format!("{} s", ms / 1000)
     } else {
         format!("{:.1} s", ms as f32 / 1000.0)

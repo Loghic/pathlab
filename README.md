@@ -107,6 +107,90 @@ End-to-end GUI testing isn't included on purpose: the solver and undo
 stack are the parts where bugs hide and they're 100% testable as pure
 Rust. The GUI module is thin glue around them.
 
+### Formatting and linting
+
+The two `lint` checks CI runs are easy to fix locally — usually
+automatically.
+
+**`cargo fmt`** rewrites every `.rs` file in place using the standard
+Rust formatting rules:
+
+```bash
+cargo fmt --all                     # rewrite in place
+cargo fmt --all -- --check          # what CI does — exits non-zero on diffs
+```
+
+If you don't have `rustfmt` installed, run `rustup component add rustfmt`
+once. After that, just running `cargo fmt` before each commit is enough
+to keep CI happy.
+
+**`cargo clippy`** catches everything else — dead code, dubious idioms,
+performance footguns, deprecated API usage. CI runs it with
+`-D warnings`, meaning *any* warning fails the job.
+
+```bash
+cargo clippy --all-targets --all-features -- -D warnings
+```
+
+Most clippy warnings have an auto-fix:
+
+```bash
+# Apply all mechanically-safe fixes, then check what's left.
+cargo clippy --fix --all-targets --all-features
+cargo clippy --all-targets --all-features -- -D warnings
+```
+
+If `--fix` complains about a dirty working tree, add
+`--allow-dirty --allow-staged`. Always `git diff` after a `--fix` run —
+the auto-rewrites are usually right, but a few lints (especially around
+loop-to-iterator rewrites) need a human eye. Lints that need judgement
+get printed as warnings instead of being auto-fixed; clear those by
+hand. The lint name in each warning links to documentation explaining
+the rationale, so you can decide between fixing the code and adding
+`#[allow(clippy::lint_name)]` with a short justification.
+
+A typical pre-push routine:
+
+```bash
+cargo fmt --all
+cargo clippy --fix --allow-dirty --allow-staged --all-targets --all-features
+cargo clippy --all-targets --all-features -- -D warnings   # confirm
+cargo test
+```
+
+### Local pre-commit hook
+
+To run the same checks as CI before every commit (so you never push a
+red build), install the included git hook. Pick whichever path matches
+how you already work:
+
+**Native git hook (zero dependencies):**
+
+```bash
+./scripts/install-hooks.sh
+```
+
+This symlinks `scripts/pre-commit` into `.git/hooks/`. Future updates
+to the script are picked up automatically.
+
+**Via the [`pre-commit`](https://pre-commit.com) framework:**
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+This reads `.pre-commit-config.yaml`. Same three checks, different
+runner.
+
+Either way, the hook runs `cargo fmt --check`, `cargo clippy -D warnings`,
+and `cargo test`, in that order, and blocks the commit if anything
+fails. Skip the hook for a single commit (e.g. a WIP push) with:
+
+```bash
+git commit --no-verify
+```
+
 ## Controls
 
 | Action | How |

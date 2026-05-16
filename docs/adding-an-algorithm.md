@@ -32,7 +32,7 @@ the-middle node, etc.), add it as a private field on `Solver`. Keep
 existing fields untouched to avoid breaking the other algorithms.
 
 ```rust
-// src/solver/solver.rs
+// src/solver/core.rs
 pub struct Solver {
     // ...
     open_queue_back: VecDeque<Coord>,

@@ -25,7 +25,7 @@ graph TD
     subgraph solver["solver/"]
         algo["algorithm.rs<br/>Algorithm enum"]
         heur["heuristic.rs<br/>Heuristic enum"]
-        sv["solver.rs<br/>Solver"]
+        sv["core.rs<br/>Solver"]
         kp["k_paths.rs<br/>Yen's algorithm"]
         sv --> algo
         sv --> heur
