@@ -1,0 +1,45 @@
+# --- Rust build artefacts -----------------------------------------------
+/target/
+**/target/
+
+# Output binaries from `wasm-bindgen` and `trunk`
+/dist/
+/pkg/
+
+# Cargo lock file: KEEP it for binary crates (this is one). Listed here
+# so contributors don't accidentally add it to a global ignore.
+# !Cargo.lock
+
+# --- Editor / IDE -------------------------------------------------------
+.vscode/
+.idea/
+*.iml
+.zed/
+
+# JetBrains shelving
+.shelf/
+
+# Emacs / Vim swap files
+*~
+*.swp
+*.swo
+\#*\#
+.\#*
+
+# --- OS junk ------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Local config / scratch --------------------------------------------
+*.local
+.env
+.env.local
+/scratch/
+/tmp/
+
+# Trunk dev-server cache
+/.trunk/
+
+# Rust analyzer
+rust-project.json
