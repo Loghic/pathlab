@@ -22,8 +22,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install stable toolchain (with rustfmt + clippy)
-        uses: dtolnay/rust-toolchain@stable
+      # No `@stable` qualifier - dtolnay/rust-toolchain reads
+      # rust-toolchain.toml automatically and installs the exact version
+      # pinned there, so CI and contributors always run the same clippy.
+      - name: Install pinned toolchain
+        uses: dtolnay/rust-toolchain@master
         with:
           components: rustfmt, clippy
 
@@ -54,7 +57,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@master
       - uses: Swatinem/rust-cache@v2
 
       - name: Install Linux GUI dependencies
@@ -79,9 +82,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
+      # The wasm32 target is declared in rust-toolchain.toml, so it
+      # gets installed automatically here too.
+      - uses: dtolnay/rust-toolchain@master
 
       - uses: Swatinem/rust-cache@v2
         with:

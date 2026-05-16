@@ -200,7 +200,7 @@ fn draw_solver_overlay(app: &MazeApp, painter: &egui::Painter, origin: egui::Pos
     let mut ordered: Vec<(usize, &Vec<(usize, usize)>)> =
         solver.paths().iter().enumerate().collect();
     // Longest first; ties keep their original order.
-    ordered.sort_by(|a, b| b.1.len().cmp(&a.1.len()));
+    ordered.sort_by_key(|entry| std::cmp::Reverse(entry.1.len()));
 
     for (idx, path) in ordered {
         if path.len() < 2 {

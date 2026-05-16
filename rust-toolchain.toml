@@ -1,0 +1,13 @@
+# Pinning a specific version (rather than `stable`) means CI and every
+# contributor's local machine run the exact same rustc and clippy. This
+# prevents the "passes locally, fails in CI" trap where a newer clippy
+# adds a lint that didn't exist when you last ran it locally.
+#
+# To bump: pick the latest stable from https://forge.rust-lang.org/
+# and update `channel`. Run `cargo clippy` to discover any new lints,
+# fix them, commit the toolchain bump and the fixes together.
+
+[toolchain]
+channel = "1.95.0"
+components = ["rustfmt", "clippy"]
+targets = ["wasm32-unknown-unknown"]
