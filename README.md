@@ -15,7 +15,7 @@ from the same codebase.
 - **Selectable heuristics for A***: Manhattan, Euclidean, Chebyshev, and Zero
   (which collapses A* into Dijkstra).
 - **K-Shortest paths visualisation** — pick a `k` between 1 and 32 and
-  the canvas renders every distinct path in its own colour, drawn
+  the canvas renders every distinct path in[118;1:3u its own colour, drawn
   longest-to-shortest so the optimal route stays on top.
 - **Built-in maze presets** plus an in-app **wall editor** (draw / erase /
   fill / invert).
@@ -41,20 +41,45 @@ cd pathlab
 cargo run --release
 ```
 
+The first `cargo` command in the project will pause briefly while
+`rustup` installs the pinned toolchain (see [Toolchain](#toolchain)
+below). After that, everything is fast.
+
 ### Web
 
 The project is set up for [Trunk](https://trunkrs.dev):
 
 ```bash
 cargo install trunk
-rustup target add wasm32-unknown-unknown
 trunk serve --release
 ```
+
+The `wasm32-unknown-unknown` target is declared in `rust-toolchain.toml`,
+so `rustup` installs it automatically — no separate `rustup target add`
+needed.
 
 Then open <http://127.0.0.1:8080>.
 
 > If you build with `wasm-pack` or `wasm-bindgen-cli` directly, make sure the
 > output file is called `maze_solver.js` so the `index.html` import resolves.
+
+## Toolchain
+
+`rust-toolchain.toml` pins the project to a specific Rust version
+(currently `1.95.0`). The first `cargo` command in the project
+auto-installs that version via `rustup`; nothing else for you to do.
+
+The pin exists because clippy's lint set changes between releases.
+Without it, contributors on different Rust versions would see different
+warnings, and CI (always running the newest stable) would fail
+mysteriously on code that was clean on someone's laptop. With the pin,
+your laptop and CI run the exact same compiler and clippy.
+
+To verify it's working: `rustup show` should print
+`active toolchain: 1.95.0 (overridden by .../rust-toolchain.toml)`.
+
+If a maintainer bumps the pin, your next `cargo build` quietly
+downloads the new version. No action required from you.
 
 ## Project layout
 
@@ -69,7 +94,11 @@ maze-solver/
 │   └── platform/        # cross-platform Instant + file pickers
 ├── assets/              # sample mazes (.pbm)
 ├── docs/                # extended documentation (see below)
-└── index.html           # browser entry point for the wasm build
+├── scripts/             # pre-commit hook + installer
+├── Cargo.toml           # crate manifest
+├── rust-toolchain.toml  # pinned compiler version
+├── index.html           # browser entry point for the wasm build
+└── .github/workflows/   # CI: fmt, clippy, test, wasm-check
 ```
 
 ## Documentation
@@ -120,9 +149,9 @@ cargo fmt --all                     # rewrite in place
 cargo fmt --all -- --check          # what CI does — exits non-zero on diffs
 ```
 
-If you don't have `rustfmt` installed, run `rustup component add rustfmt`
-once. After that, just running `cargo fmt` before each commit is enough
-to keep CI happy.
+`rustfmt` and `clippy` are both listed as components in
+`rust-toolchain.toml`, so `rustup` installed them with the toolchain
+on your first `cargo` invocation. Nothing extra to do.
 
 **`cargo clippy`** catches everything else — dead code, dubious idioms,
 performance footguns, deprecated API usage. CI runs it with

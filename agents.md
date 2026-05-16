@@ -50,10 +50,16 @@ build *somewhere* (often on the platform you didn't test).
 4. **Wall/Empty are the only cell types.** PBM is a two-bit format
    and adding a third `Cell` variant breaks round-tripping. See the
    "design notes" section for an explanation of why "endpoint in a
-   wall" is *not* a reason to add a new variant.
+   wall" is *[118;1:3unot* a reason to add a new variant.
 5. **Don't call `cargo` commands the user didn't ask for.** Builds
    can be slow and pollute their terminal. Suggest commands; let them
    run them.
+6. **The Rust toolchain is pinned in `rust-toolchain.toml`.** Don't
+   bump the version casually — bumping it can introduce new clippy
+   lints that break CI. If you genuinely need a newer compiler
+   feature, bump the pin *and* fix any new lints in the same commit.
+   Don't write conditional code that targets multiple toolchains;
+   one project, one toolchain.
 
 ## Module conventions
 
@@ -154,6 +160,32 @@ and `cargo test` run automatically before each commit. Trust the hook:
 if it rejects a commit, fix the underlying issue rather than bypassing
 it. The only legitimate reason to use `git commit --no-verify` is a
 genuine WIP push to a personal branch.
+
+## Toolchain pin
+
+`rust-toolchain.toml` at the repo root pins the project to a specific
+Rust version (currently `1.95.0`). `rustup` reads this file
+automatically: any `cargo` invocation inside the project tree uses
+exactly the pinned compiler, regardless of your global default.
+
+This exists because **clippy's lint set changes between Rust releases**.
+Without the pin, contributors on different stable versions would see
+different warnings, and CI (which always ran the newest stable) would
+fail mysteriously on code that was clean on someone's laptop.
+
+When operating in this repo:
+
+- Use the pinned toolchain. `rustup show` should display
+  "active toolchain: 1.95.0 (overridden by rust-toolchain.toml)".
+- Don't add `#[allow(clippy::lint_name)]` to silence a lint that's
+  only triggered because you ran a newer clippy locally. Update the
+  pin instead — or, better, leave the version alone and write code
+  that passes the pinned clippy.
+- To bump the pin (rare), edit `channel = "1.95.0"` to the new
+  version, run `cargo clippy --fix --allow-dirty --allow-staged
+  --all-targets --all-features`, then `cargo clippy ... -D warnings`
+  to catch leftovers. Commit the pin bump and the lint fixes
+  together with a clear message.
 
 ## egui version pin
 
