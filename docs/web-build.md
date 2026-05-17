@@ -4,36 +4,48 @@ The same `src/main.rs` compiles to a desktop binary *and* a wasm
 module. `eframe` provides both runners; `cfg(target_arch = "wasm32")`
 picks the right one at compile time.
 
-## Build with Trunk (recommended)
+## Build with Trunk
 
 [Trunk](https://trunkrs.dev) bundles wasm-bindgen + asset hashing +
-a dev server. The included `index.html` is already trunk-compatible.
+a dev server. `index.html` uses Trunk's `<link data-trunk rel="rust">`
+directive to wire up the wasm module, so Trunk is required (a raw
+`wasm-bindgen-cli` workflow would need a hand-written script tag in
+`index.html`).
 
 ```bash
 cargo install trunk
-rustup target add wasm32-unknown-unknown
 trunk serve --release
 ```
 
 Open <http://127.0.0.1:8080>. Saving a `.rs` file rebuilds + hot-reloads.
 
-## Build with wasm-bindgen-cli
+## Live demo on GitHub Pages
 
-If you'd rather not use Trunk:
+Every push to `main` is built and deployed by
+`.github/workflows/pages.yml`. The deployed URL is
+<https://Loghic.github.io/pathlab/>.
+
+The workflow runs:
 
 ```bash
-cargo install wasm-bindgen-cli
-rustup target add wasm32-unknown-unknown
-cargo build --release --target wasm32-unknown-unknown
-wasm-bindgen \
-    target/wasm32-unknown-unknown/release/pathlab.wasm \
-    --out-dir dist --target web
-cp index.html dist/
-python3 -m http.server -d dist 8080
+trunk build --release --public-url "/pathlab/"
 ```
 
-The `index.html` imports `./pathlab.js`, so the output names must
-match — if you rename the binary in `Cargo.toml`, update the import too.
+The `--public-url` flag matters: project pages live at
+`https://<user>.github.io/<repo>/`, not at the domain root, so every
+script and asset URL in the generated `index.html` needs the
+`/pathlab/` prefix or the browser will 404 trying to load
+`/pathlab-<hash>.wasm` from `/`.
+
+To enable this on a fresh fork:
+
+1. **Repo Settings → Pages → Source:** *GitHub Actions*. (Not "Deploy
+   from a branch" — that's for static-only sites.)
+2. **Push to `main`.** The first deploy takes ~3-5 minutes cold.
+
+The `--public-url` value is generated from the repo name at build
+time (`${{ github.event.repository.name }}` in the workflow), so
+forks with a renamed repo work without editing.
 
 ## The timing pitfall this project hit
 

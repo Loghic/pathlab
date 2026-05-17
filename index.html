@@ -4,6 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pathlab</title>
+
+    <!--
+      Trunk processes this <link> at build time. It compiles the Rust
+      crate to wasm, runs wasm-bindgen, hashes the output filenames, and
+      injects the right <script type="module"> tag before </body>. The
+      `data-bin` value matches the [[bin]] name in Cargo.toml.
+
+      Using this directive (instead of a hard-coded `import "./pathlab.js"`)
+      means `--public-url` rewrites work correctly when the site is
+      deployed at a subpath, e.g. https://Loghic.github.io/pathlab/.
+    -->
+    <link data-trunk rel="rust" data-bin="pathlab" data-wasm-opt="z" />
+
     <style>
       html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #1a1a1a; }
       canvas { width: 100%; height: 100%; display: block; }
@@ -11,10 +24,5 @@
   </head>
   <body>
     <canvas id="the_canvas_id"></canvas>
-    <script type="module">
-      // Built with: trunk build --release  (or `trunk serve` for dev)
-      import init from "./pathlab.js";
-      init();
-    </script>
   </body>
 </html>

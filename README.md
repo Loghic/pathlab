@@ -4,6 +4,9 @@ A cross-platform pathfinding visualizer built in Rust with [`egui`]/`eframe`.
 Runs natively (Windows / macOS / Linux) **and** in the browser via WebAssembly
 from the same codebase.
 
+**[▶ Try it live](https://Loghic.github.io/pathlab/)** — same build,
+deployed to GitHub Pages on every push to `main`.
+
 [![ci](https://github.com/Loghic/pathlab/actions/workflows/ci.yml/badge.svg)](https://github.com/Loghic/pathlab/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/Loghic/pathlab/branch/main/graph/badge.svg)](https://codecov.io/gh/Loghic/pathlab)
 ![rust](https://img.shields.io/badge/rust-1.95.0-blue)
@@ -62,8 +65,28 @@ needed.
 
 Then open <http://127.0.0.1:8080>.
 
-> If you build with `wasm-pack` or `wasm-bindgen-cli` directly, make sure the
-> output file is called `pathlab.js` so the `index.html` import resolves.
+Every push to `main` is also auto-deployed to
+**<https://Loghic.github.io/pathlab/>** by the `pages` workflow
+(`.github/workflows/pages.yml`). To deploy from a fork, see
+[Hosting your own demo](#hosting-your-own-demo) below.
+
+## Hosting your own demo
+
+If you fork the repo and want a working live demo on your own
+account:
+
+1. In your fork's GitHub settings → **Pages**, set **Source** to
+   *GitHub Actions* (not "Deploy from a branch").
+2. Push a commit to `main`. The `pages` workflow builds the wasm
+   bundle with `trunk build --release` and deploys it.
+3. The URL will be `https://<your-user>.github.io/pathlab/`. If you
+   renamed the fork, the path changes accordingly — `--public-url`
+   is set from the repo name at build time, so this works without
+   editing anything.
+
+First deploy takes ~3-5 min cold. Subsequent deploys are under a
+minute thanks to `Swatinem/rust-cache` (bundled with
+`setup-rust-toolchain`).
 
 ## Toolchain
 

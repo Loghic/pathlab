@@ -1,0 +1,60 @@
+name: pages
+
+on:
+  # Deploy on every push to the default branch.
+  push:
+    branches: [main, master]
+  # Allow a manual trigger from the Actions tab without needing a push.
+  workflow_dispatch:
+
+# GitHub Pages deployments are a single resource; cancel an older
+# in-progress deploy when a newer one arrives.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  # ----- Build the wasm bundle -----------------------------------------
+  build:
+    name: build wasm bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Reads rust-toolchain.toml automatically, including the
+      # wasm32-unknown-unknown target declared there.
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+
+      - name: Install trunk
+        uses: jetli/trunk-action@v0.5.0
+        with:
+          version: "latest"
+
+      # Project pages are served from https://<user>.github.io/<repo>/,
+      # NOT from the domain root. trunk needs to know that so all the
+      # generated <script> and asset URLs are prefixed correctly.
+      # ${{ github.event.repository.name }} expands to "pathlab" here.
+      - name: Build with trunk
+        run: trunk build --release --public-url "/${{ github.event.repository.name }}/"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  # ----- Deploy to Pages ----------------------------------------------
+  deploy:
+    name: deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
